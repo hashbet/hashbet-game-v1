@@ -15,7 +15,7 @@ function HashBetCheck(modulo,SecretText,BlockHash){
 //  6 for dice roll
 //  6*6 = 36 for double dice
 //  37 for roulette
-//  100 for polyroll
+//  100 for classic dice
 let modulo = 2 // flip
 // SecretText and BlockHash get by hashbet.com game history
 let SecretText = 2569774823 
