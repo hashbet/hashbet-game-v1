@@ -9,7 +9,7 @@ This is a simple function for game result verification written by nodejs and eth
 
 ## step 1
 ```
-https://github.com/hashbet/hashbet-game-v1.git
+git clone https://github.com/hashbet/hashbet-game-v1.git
 cd  VerifyByNodejs
 npm install ethers
 ```
