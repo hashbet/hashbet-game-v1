@@ -264,7 +264,7 @@ contract HashBet is Ownable, ReentrancyGuard {
         bet.gambler=payable(msg.sender);
         bet.isSettled=false;
         bet.outcome=0;
-        bet.winAmount=0;
+        bet.winAmount=possibleWinAmount;
         bet.randomNumber=0;
         bet.commit=commit;
         bet.isLarger=isLarger;
@@ -282,6 +282,9 @@ contract HashBet is Ownable, ReentrancyGuard {
             realRollEdge = MAX_MODULO - rollEdge - 1;
         }
         winAmount = (amount - houseEdge) * modulo / realRollEdge;
+
+        // round down to multiple 1000Gweis
+        winAmount = (winAmount / 1e12) * 1e12;
 
         uint maxWinAmount = amount + maxProfit;
 
@@ -339,7 +342,7 @@ contract HashBet is Ownable, ReentrancyGuard {
         uint outcome = uint(entropy) % modulo;
 
         // Win amount if gambler wins this bet
-        uint possibleWinAmount = getDiceWinAmount(amount, modulo, rollEdge, isLarger);
+        uint possibleWinAmount = bet.winAmount;
 
         // Actual win amount by gambler
         uint winAmount = 0;
@@ -399,17 +402,15 @@ contract HashBet is Ownable, ReentrancyGuard {
     // In case you ever find yourself in a situation like this, just contact hashbet support.
     // However, nothing precludes you from calling this method yourself.
     function refundBet(uint commit) external nonReentrant payable {
-        
         Bet storage bet = bets[commit];
         uint amount = bet.amount;
-        bool isLarger = bet.isLarger;
 
         // Validation check
         require (amount > 0, "Bet does not exist."); // Check that bet exists
         require (bet.isSettled == false, "Bet is settled already."); // Check that bet is still open
         require (block.number > bet.placeBlockNumber + BET_EXPIRATION_BLOCKS, "Wait after placing bet before requesting refund.");
 
-        uint possibleWinAmount = getDiceWinAmount(amount, bet.modulo, bet.rollEdge, isLarger);
+        uint possibleWinAmount = bet.winAmount;
 
         // Unlock possibleWinAmount from lockedInBets, regardless of the outcome.
         lockedInBets -= possibleWinAmount;
@@ -428,7 +429,7 @@ contract HashBet is Ownable, ReentrancyGuard {
     // Check arguments
     function validateArguments(uint amount, uint betMask, uint modulo, uint commitLastBlock, uint commit, bool isLarger, bytes32 r, bytes32 s) view private {
         // Validate input data.
-        require (modulo > 1 && modulo <= MAX_MODULO, "Modulo should be within range.");
+        require (modulo == 2 || modulo == 6  || modulo == 36 || modulo == 37  || modulo == 100, "Modulo should be valid value.");
         require (amount >= minBetAmount && amount <= maxBetAmount, "Bet amount should be within range.");
         require (betMask > 0 && betMask < MAX_BET_MASK, "Mask should be within range.");
         
